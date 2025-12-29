@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bóveda de Seguridad</title>
+    <style>
+        :root {
+            --background-color: #0d1117;
+            --text-color: #c9d1d9;
+            --input-bg-color: #010409;
+            --border-color: #30363d;
+            --accent-color: #58a6ff;
+            --error-color: #f85149;
+            --success-color: #3fb950;
+        }
+
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 500px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--accent-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+            margin-top: 0;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        input[type="password"], input[type="text"] {
+            width: 100%;
+            padding: 0.8rem;
+            background-color: var(--input-bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-color);
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 5px var(--accent-color);
+        }
+
+        button {
+            width: 100%;
+            padding: 0.8rem;
+            background-color: var(--accent-color);
+            border: none;
+            border-radius: 6px;
+            color: var(--background-color);
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #79c0ff;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #vault-content {
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        #secret-link-container {
+            position: relative;
+        }
+
+        #secret-link {
+            width: 100%;
+            padding-right: 40px; /* Space for the button */
+            box-sizing: border-box;
+        }
+
+        #copy-button {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+            color: var(--text-color);
+        }
+
+        #copy-button svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .message {
+            text-align: center;
+            margin-top: 1rem;
+            font-weight: bold;
+        }
+
+        .error {
+            color: var(--error-color);
+        }
+
+        .success {
+            color: var(--success-color);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="login-container">
+        <h1>Acceso a Bóveda</h1>
+        <div class="input-group">
+            <label for="password">Contraseña:</label>
+            <input type="password" id="password" placeholder="Introduce tu clave">
+        </div>
+        <button id="unlock-button">Desbloquear</button>
+        <p id="error-message" class="message error hidden"></p>
+    </div>
+
+    <div class="container hidden" id="vault-container">
+        <h1>Contenido Seguro</h1>
+        <div id="vault-content">
+            <label for="secret-link">Enlace Protegido:</label>
+            <div id="secret-link-container">
+                 <input type="text" id="secret-link" readonly>
+                 <button id="copy-button" title="Copiar al portapapeles">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-5zm0 16H8V7h11v14z"/></svg>
+                </button>
+            </div>
+            <p id="copy-message" class="message success hidden">¡Enlace copiado!</p>
+        </div>
+    </div>
+
+    <script>
+        // Lógica de la aplicación
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- CONFIGURACIÓN DE SEGURIDAD ---
+            // Contraseña ofuscada para evitar que sea visible a simple vista.
+            // Es la versión en Base64 de la contraseña original 'tku693#@'.
+            const protectedPass = 'dGt1NjkzI0A=';
+
+            // --- ELEMENTOS DEL DOM ---
+            const loginContainer = document.getElementById('login-container');
+            const vaultContainer = document.getElementById('vault-container');
+            const unlockButton = document.getElementById('unlock-button');
+            const passwordInput = document.getElementById('password');
+            const errorMessage = document.getElementById('error-message');
+            const secretLinkInput = document.getElementById('secret-link');
+            const copyButton = document.getElementById('copy-button');
+            const copyMessage = document.getElementById('copy-message');
+
+            // --- CONTENIDO SECRETO ---
+            const secretLink = 'https://drive.google.com/drive/folders/1z5F7tPu1ZNxH6HT09mr6CLCTROyQp2qY';
+
+            // --- FUNCIONES ---
+
+            // Función para verificar la contraseña
+            const checkPassword = () => {
+                const enteredPassword = passwordInput.value;
+                // Compara la versión en Base64 de la contraseña introducida con la almacenada.
+                if (btoa(enteredPassword) === protectedPass) {
+                    unlockVault();
+                } else {
+                    showError('Acceso Denegado. Contraseña incorrecta.');
+                }
+            };
+
+            // Función para desbloquear la bóveda
+            const unlockVault = () => {
+                loginContainer.classList.add('hidden');
+                vaultContainer.classList.remove('hidden');
+                secretLinkInput.value = secretLink;
+            };
+
+            // Función para mostrar errores
+            const showError = (message) => {
+                errorMessage.textContent = message;
+                errorMessage.classList.remove('hidden');
+                // Agita el input para un efecto visual
+                passwordInput.style.animation = 'shake 0.5s';
+                setTimeout(() => {
+                    passwordInput.style.animation = '';
+                }, 500);
+            };
+
+            // Función para copiar el enlace
+            const copyToClipboard = () => {
+                secretLinkInput.select();
+                secretLinkInput.setSelectionRange(0, 99999); // Para móviles
+
+                navigator.clipboard.writeText(secretLinkInput.value).then(() => {
+                    copyMessage.classList.remove('hidden');
+                    setTimeout(() => {
+                        copyMessage.classList.add('hidden');
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Error al copiar el texto: ', err);
+                });
+            };
+
+            // --- EVENT LISTENERS ---
+
+            // Al hacer clic en el botón de desbloquear
+            unlockButton.addEventListener('click', checkPassword);
+
+            // Al presionar "Enter" en el campo de contraseña
+            passwordInput.addEventListener('keypress', (event) => {
+                if (event.key === 'Enter') {
+                    checkPassword();
+                }
+            });
+
+            // Al hacer clic en el botón de copiar
+            copyButton.addEventListener('click', copyToClipboard);
+        });
+
+        // Añadir keyframes para la animación de 'shake'
+        const styleSheet = document.createElement("style");
+        styleSheet.type = "text/css";
+        styleSheet.innerText = `
+            @keyframes shake {
+                10%, 90% { transform: translateX(-1px); }
+                20%, 80% { transform: translateX(2px); }
+                30%, 50%, 70% { transform: translateX(-4px); }
+                40%, 60% { transform: translateX(4px); }
+            }
+        `;
+        document.head.appendChild(styleSheet);
+
+    </script>
+</body>
+</html>
