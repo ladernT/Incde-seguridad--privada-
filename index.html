@@ -24,6 +24,7 @@
             align-items: center;
             height: 100vh;
             margin: 0;
+            overflow: hidden; /* Evita barras de scroll durante animaciones */
         }
 
         .container {
@@ -33,6 +34,13 @@
             border-radius: 8px;
             padding: 2rem;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transform: scale(0.95);
+            animation: fadeInScale 0.5s forwards ease-out;
+        }
+
+        #vault-container {
+            animation-delay: 0.2s; /* Retraso para la aparición de la bóveda */
         }
 
         h1 {
@@ -67,6 +75,7 @@
             outline: none;
             border-color: var(--accent-color);
             box-shadow: 0 0 5px var(--accent-color);
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
 
         button {
@@ -78,11 +87,15 @@
             color: var(--background-color);
             font-weight: bold;
             cursor: pointer;
-            transition: background-color 0.2s;
+            transition: background-color 0.2s, transform 0.1s;
         }
 
         button:hover {
             background-color: #79c0ff;
+        }
+
+        button:active {
+            transform: scale(0.98); /* Efecto al presionar */
         }
 
         .hidden {
@@ -133,6 +146,56 @@
 
         .success {
             color: var(--success-color);
+        }
+
+        /* Animaciones */
+        @keyframes fadeInScale {
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .fade-out {
+            animation: fadeOut 0.3s forwards ease-in;
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+        }
+
+        /* Diseño Adaptable (Responsive) */
+        @media (max-width: 600px) {
+            .container {
+                padding: 1.5rem;
+                width: 100%;
+                height: 100%;
+                border: none;
+                border-radius: 0;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+
+            input[type="password"], input[type="text"], button {
+                padding: 1rem;
+                font-size: 1em;
+            }
+
+            #secret-link {
+                /* Solución robusta para el desbordamiento de texto */
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                padding-right: 50px;
+            }
         }
     </style>
 </head>
@@ -196,11 +259,15 @@
                 }
             };
 
-            // Función para desbloquear la bóveda
+            // Función para desbloquear la bóveda con animación
             const unlockVault = () => {
-                loginContainer.classList.add('hidden');
-                vaultContainer.classList.remove('hidden');
-                secretLinkInput.value = secretLink;
+                loginContainer.classList.add('fade-out');
+
+                loginContainer.addEventListener('animationend', () => {
+                    loginContainer.classList.add('hidden');
+                    vaultContainer.classList.remove('hidden');
+                    secretLinkInput.value = secretLink;
+                }, { once: true });
             };
 
             // Función para mostrar errores
